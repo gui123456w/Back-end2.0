@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Início{% endblock %}
+
+{% block content %}
+    <h1>Bem-vindo, {{ usuarios }}</h1>
+    <p>Você entrou no sistema com sucesso.</p>
+    
+    
+    <div class="links">
+        <a href="{{ url_for('main.reciclar') }}">
+            ♻️ Quero reciclar
+        </a>
+        <br>
+        <a href="/logout">Sair</a> 
+        <br>
+        Onde reciclar? <a href="/locais">locais</a>
+    </div>
+    <br>
+
+{% endblock %}

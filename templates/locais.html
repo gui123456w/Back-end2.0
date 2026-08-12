@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}
+Locais de Reciclagem
+{% endblock %}
+
+{% block css %}
+
+{% endblock %}
+
+{% block content %}
+
+<div class="titulo">
+
+<h2>
+    Locais de Reciclagem
+</h2>
+
+<p>
+    Encontre locais para realizar
+    o descarte correto dos materiais.
+</p>
+<a  
+    href="{{ url_for('main.index') }}"
+    class="Inicio"
+>
+Inicio
+</a>
+</div>
+
+{% if locais %}
+
+<div class="locais">
+
+    {% for local in locais %}
+
+        <div class="card">
+
+            <h2>
+                {{ local.nome }}
+            </h2>
+
+
+            {% if local.endereco %}
+
+                <div class="informacao">
+
+                    <strong>
+                        Endereço:
+                    </strong>
+
+                    {{ local.endereco }}
+
+                </div>
+
+            {% endif %}
+
+
+            {% if local.telefone %}
+
+                <div class="informacao">
+
+                    <strong>
+                        Telefone:
+                    </strong>
+
+                    {{ local.telefone }}
+
+                </div>
+
+            {% endif %}
+
+
+            {% if local.horario %}
+
+                <div class="informacao">
+
+                    <strong>
+                        Horário:
+                    </strong>
+
+                    {{ local.horario }}
+
+                </div>
+
+            {% endif %}
+
+
+            <a
+                href="{{ url_for('main.detalhes_local', id=local.id_local) }}"
+            >
+                Ver detalhes
+            </a>
+
+        </div>
+
+    {% endfor %}
+
+</div>
+
+
+{% else %}
+
+
+<div class="vazio">
+
+    <h2>
+        Nenhum local encontrado
+    </h2>
+
+    <p>
+        Ainda não existem locais cadastrados.
+    </p>
+
+</div>
+
+
+{% endif %}
+
+{% endblock %}
