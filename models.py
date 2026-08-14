@@ -73,3 +73,47 @@ class LocaisMateriais(db.Model):
         backref="locais",
         lazy=True
     )
+    
+    
+class RecuperacaoSenha(db.Model):
+    __tablename__ = "recuperacao_senha"
+
+    id_recuperacao = db.Column(
+        db.Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    id_usuario = db.Column(
+        db.Integer,
+        db.ForeignKey("usuarios.id_usuario"),
+        nullable=False
+    )
+
+    token = db.Column(
+        db.String(100),
+        unique=True,
+        nullable=False
+    )
+
+    data_criacao = db.Column(
+        db.DateTime,
+        server_default=db.func.current_timestamp()
+    )
+
+    expiracao = db.Column(
+        db.DateTime,
+        nullable=False
+    )
+
+    usado = db.Column(
+        db.Boolean,
+        default=False,
+        nullable=False
+    )
+
+    usuario = db.relationship(
+        "Usuarios",
+        backref="recuperacoes_senha",
+        lazy=True
+    )

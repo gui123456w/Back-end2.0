@@ -82,7 +82,6 @@ def cadastro():
 
     return render_template("cadastro.html")
 
-
 @main.route("/login", methods=["GET", "POST"])
 def login():
 

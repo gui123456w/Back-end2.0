@@ -58,8 +58,3 @@ with app.app_context():
             print("ID:", tiposMaterias.id_material)
             print("Nome:", tiposMaterias.nome)
             print("Instruções de Preparo:", tiposMaterias.instrucoes_preparo)
-
-
-
-
-
