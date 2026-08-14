@@ -114,6 +114,6 @@ class RecuperacaoSenha(db.Model):
 
     usuario = db.relationship(
         "Usuarios",
-        backref="recuperacoes_senha",
+        backref="recuperacao_senha",
         lazy=True
     )

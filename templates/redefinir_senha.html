@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Redefinir senha{% endblock %}
+
+{% block content %}
+
+<h1>Redefinir senha</h1>
+
+<p>
+    Digite sua nova senha e confirme para concluir a alteração.
+</p>
+
+<form method="POST">
+
+{% if form %}
+    {{ form.hidden_tag() }}
+{% endif %}
+
+<label for="senha">Nova senha</label>
+
+<input
+    type="password"
+    id="senha"
+    name="senha"
+    placeholder="Digite sua nova senha"
+    required
+    autocomplete="new-password"
+>
+
+<label for="confirmar_senha">Confirmar nova senha</label>
+
+<input
+    type="password"
+    id="confirmar_senha"
+    name="confirmar_senha"
+    placeholder="Digite novamente sua nova senha"
+    required
+    autocomplete="new-password"
+>
+
+<button type="submit">
+    Alterar senha
+</button>
+
+</form>
+
+<div class="links">
+    <a href="{{ url_for('main.login') }}">
+        Voltar para o login
+    </a>
+</div>
+
+{% endblock %}
