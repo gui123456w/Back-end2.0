@@ -5,7 +5,7 @@ from flask import redirect
 from flask import session
 from flask import flash
 from flask import url_for
-
+from flask import current_app
 from datetime import datetime, timedelta
 import secrets
 
@@ -39,7 +39,8 @@ def index():
 
 @main.route("/cadastro", methods=["GET", "POST"])
 def cadastro():
-
+    current_app.secret_key = "chave_forçada_123"
+    
     if request.method == "POST":
 
         nome = request.form["nome"].strip()
@@ -49,7 +50,7 @@ def cadastro():
         cpf_bruto = request.form.get("cpf", "").strip()
         cpf = "".join(filter(str.isdigit, cpf_bruto))
 
- 
+
         if not nome or not email or not senha or not cpf:
             flash("Preencha todos os campos.")
             return redirect("/cadastro")
