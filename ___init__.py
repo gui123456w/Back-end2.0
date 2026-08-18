@@ -5,12 +5,15 @@ from dotenv import load_dotenv
 from config import Config
 from database import db
 from extensions import mail
+
+
 def create_app():
+    load_dotenv()
+
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    # Força uma chave secreta diretamente na instância do app
-    app.secret_key = app.config.get("SECRET_KEY") or "chave_secreta_provisoria_para_testes_123"
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 
     db.init_app(app)
     mail.init_app(app)

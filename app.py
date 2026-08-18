@@ -1,7 +1,4 @@
 from ___init__ import create_app
-from flask import Flask, render_template
-from database import db
-from models import *
 
 app = create_app()
 
