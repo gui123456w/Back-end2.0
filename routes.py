@@ -1,11 +1,4 @@
-from flask import Blueprint
-from flask import render_template
-from flask import request
-from flask import redirect
-from flask import session
-from flask import flash
-from flask import url_for
-from flask import current_app
+from flask import Blueprint, render_template, request, redirect, session, flash, url_for, current_app
 from datetime import datetime, timedelta
 import secrets
 
@@ -13,23 +6,18 @@ from flask_mail import Message
 
 from database import db
 
-from models import Usuarios
-from models import Locais
-from models import TiposMaterial
-from models import LocaisMateriais
-from models import RecuperacaoSenha
+from models import Usuarios, Locais, TiposMaterial, LocaisMateriais, RecuperacaoSenha
 
 from extensions import mail
 
+
 main = Blueprint("main", __name__)
-
-
 
 @main.route("/")
 def index():
 
     if "usuarios_id_usuario" not in session:
-        return redirect("/login")
+        return redirect(url_for("main.login"))
 
     return render_template(
         "index.html",
@@ -37,10 +25,13 @@ def index():
     )
 
 
+# ============================================================
+# CADASTRO
+# ============================================================
+
 @main.route("/cadastro", methods=["GET", "POST"])
 def cadastro():
-    current_app.secret_key = "chave_forçada_123"
-    
+
     if request.method == "POST":
 
         nome = request.form["nome"].strip()
@@ -50,36 +41,50 @@ def cadastro():
         cpf_bruto = request.form.get("cpf", "").strip()
         cpf = "".join(filter(str.isdigit, cpf_bruto))
 
-
+        # Verifica campos obrigatórios
         if not nome or not email or not senha or not cpf:
+
             flash("Preencha todos os campos.")
-            return redirect("/cadastro")
 
+            return redirect(url_for("main.cadastro"))
 
+        # Verifica CPF
         if len(cpf) != 11:
-            flash("CPF inválido. Digite 11 números.")
-            return redirect("/cadastro")
 
-        usuario_email = Usuarios.query.filter_by(email=email).first()
+            flash("CPF inválido. Digite 11 números.")
+
+            return redirect(url_for("main.cadastro"))
+
+        # Verifica e-mail duplicado
+        usuario_email = Usuarios.query.filter_by(
+            email=email
+        ).first()
 
         if usuario_email:
-            flash("Este email já está cadastrado.")
-            return redirect("/cadastro")
 
-        usuario_cpf = Usuarios.query.filter_by(cpf=cpf).first()
+            flash("Este email já está cadastrado.")
+
+            return redirect(url_for("main.cadastro"))
+
+        # Verifica CPF duplicado
+        usuario_cpf = Usuarios.query.filter_by(
+            cpf=cpf
+        ).first()
 
         if usuario_cpf:
+
             flash("Este CPF já está cadastrado.")
-            return redirect("/cadastro")
 
+            return redirect(url_for("main.cadastro"))
 
+        # Cria usuário
         novo = Usuarios(
             nome=nome,
             email=email,
             cpf=cpf
         )
 
-
+        # Cria senha criptografada
         novo.criar_senha(senha)
 
         db.session.add(novo)
@@ -87,9 +92,14 @@ def cadastro():
 
         flash("Cadastro realizado com sucesso.")
 
-        return redirect("/login")
+        return redirect(url_for("main.login"))
 
     return render_template("cadastro.html")
+
+
+# ============================================================
+# LOGIN
+# ============================================================
 
 @main.route("/login", methods=["GET", "POST"])
 def login():
@@ -99,21 +109,25 @@ def login():
         email = request.form["email"].strip().lower()
         senha = request.form["senha"]
 
-        usuarios = Usuarios.query.filter_by(
+        usuario = Usuarios.query.filter_by(
             email=email
         ).first()
 
-        if usuarios and usuarios.verificar_senha(senha):
+        if usuario and usuario.verificar_senha(senha):
 
-            session["usuarios_id_usuario"] = usuarios.id_usuario
-            session["usuarios_nome"] = usuarios.nome
+            session["usuarios_id_usuario"] = usuario.id_usuario
+            session["usuarios_nome"] = usuario.nome
 
-            return redirect("/")
+            return redirect(url_for("main.index"))
 
         flash("Email ou senha inválidos.")
 
     return render_template("login.html")
 
+
+# ============================================================
+# RECUPERAÇÃO DE SENHA
+# ============================================================
 
 @main.route("/recuperar-senha", methods=["GET", "POST"])
 def recuperar_senha():
@@ -128,13 +142,13 @@ def recuperar_senha():
 
         if usuario:
 
-            # Gera um token aleatório
+            # Gera token
             token = secrets.token_urlsafe(64)
 
             # Token válido por 15 minutos
             expiracao = datetime.now() + timedelta(minutes=15)
 
-            # Cria o registro no banco
+            # Cria registro no banco
             recuperacao = RecuperacaoSenha(
                 id_usuario=usuario.id_usuario,
                 token=token,
@@ -145,13 +159,13 @@ def recuperar_senha():
             db.session.add(recuperacao)
             db.session.commit()
 
-            # Cria o link
+            # Cria link de recuperação
             link = request.host_url.rstrip("/") + url_for(
                 "main.redefinir_senha",
                 token=token
             )
 
-            # Cria o email
+            # Cria mensagem
             mensagem = Message(
                 subject="Recuperação de senha - Sustenta+",
                 recipients=[usuario.email]
@@ -178,20 +192,25 @@ Equipe Sustenta+
 
             mail.send(mensagem)
 
-        # Não informa se o email existe ou não
+        # Não informa se o e-mail existe
         flash(
             "Se o e-mail estiver cadastrado, "
             "você receberá um link para recuperação."
         )
 
-        return redirect("/login")
+        return redirect(url_for("main.login"))
 
     return render_template("recuperar_senha.html")
+
+
+# ============================================================
+# REDEFINIR SENHA
+# ============================================================
 
 @main.route("/redefinir-senha/<token>", methods=["GET", "POST"])
 def redefinir_senha(token):
 
-    # Procura o token no banco
+    # Procura token válido
     recuperacao = RecuperacaoSenha.query.filter_by(
         token=token,
         usado=False
@@ -204,16 +223,16 @@ def redefinir_senha(token):
             "ou já foi utilizado."
         )
 
-        return redirect("/recuperar-senha")
+        return redirect(url_for("main.recuperar_senha"))
 
-    # Verifica se o token expirou
+    # Verifica expiração
     if datetime.now() > recuperacao.expiracao:
 
         flash("O link de recuperação expirou.")
 
-        return redirect("/recuperar-senha")
+        return redirect(url_for("main.recuperar_senha"))
 
-    # Busca o usuário
+    # Busca usuário
     usuario = Usuarios.query.get(
         recuperacao.id_usuario
     )
@@ -222,8 +241,9 @@ def redefinir_senha(token):
 
         flash("Usuário não encontrado.")
 
-        return redirect("/recuperar-senha")
+        return redirect(url_for("main.recuperar_senha"))
 
+    # Alteração da senha
     if request.method == "POST":
 
         nova_senha = request.form.get(
@@ -236,7 +256,7 @@ def redefinir_senha(token):
             ""
         )
 
-        # Verifica campos vazios
+        # Campos vazios
         if not nova_senha or not confirmar_senha:
 
             flash("Preencha todos os campos.")
@@ -246,7 +266,7 @@ def redefinir_senha(token):
                 token=token
             )
 
-        # Verifica se as senhas são iguais
+        # Senhas diferentes
         if nova_senha != confirmar_senha:
 
             flash("As senhas não são iguais.")
@@ -256,7 +276,7 @@ def redefinir_senha(token):
                 token=token
             )
 
-        # Verifica tamanho mínimo
+        # Senha muito curta
         if len(nova_senha) < 8:
 
             flash(
@@ -268,57 +288,77 @@ def redefinir_senha(token):
                 token=token
             )
 
-        # Cria o hash da nova senha
+        # Cria nova senha
         usuario.criar_senha(nova_senha)
 
-        # Marca o token como usado
+        # Marca token como usado
         recuperacao.usado = True
 
-        # Salva no banco
+        # Salva
         db.session.commit()
 
         flash("Senha alterada com sucesso!")
 
-        return redirect("/login")
+        return redirect(url_for("main.login"))
 
     return render_template(
         "redefinir_senha.html",
         token=token
     )
-    
+
+
+# ============================================================
+# LOGOUT
+# ============================================================
+
 @main.route("/logout")
 def logout():
 
     session.clear()
 
-    return redirect("/login")
+    return redirect(url_for("main.login"))
 
+
+# ============================================================
+# REDIRECIONAMENTO /INDEX
+# ============================================================
 
 @main.route("/index")
 def index_redirect():
 
-    return redirect("locais.html")
+    return redirect(url_for("main.locais"))
 
+
+# ============================================================
+# LOCAIS
+# ============================================================
 
 @main.route("/locais")
 def locais():
-    
+
     if "usuarios_id_usuario" not in session:
-        return redirect("/login")
+
+        return redirect(url_for("main.login"))
 
     locais = Locais.query.all()
-    
+
     return render_template(
         "locais.html",
         locais=locais
     )
+
+
+# ============================================================
+# DETALHES DO LOCAL
+# ============================================================
+
 @main.route("/locais/<int:id>")
 def detalhes_local(id):
 
     if "usuarios_id_usuario" not in session:
-        return redirect("/login")
 
-    
+        return redirect(url_for("main.login"))
+
     local = Locais.query.get_or_404(id)
 
     materiais = (
@@ -332,17 +372,21 @@ def detalhes_local(id):
         )
         .all()
     )
+
     return render_template(
         "locais_detalhes.html",
         local=local,
-        materiais=materiais,
-        
+        materiais=materiais
     )
-    
+
+
 @main.route("/reciclar", methods=["GET", "POST"])
 def reciclar():
 
-    
+    if "usuarios_id_usuario" not in session:
+
+        return redirect(url_for("main.login"))
+
     materiais = TiposMaterial.query.order_by(
         TiposMaterial.nome
     ).all()
@@ -351,7 +395,9 @@ def reciclar():
 
     if request.method == "POST":
 
-        id_material = request.form.get("id_material")
+        id_material = request.form.get(
+            "id_material"
+        )
 
         locais = (
             db.session.query(Locais)
@@ -364,9 +410,9 @@ def reciclar():
             )
             .all()
         )
-    
+
     return render_template(
         "reciclar.html",
         materiais=materiais,
-        locais=locais,
+        locais=locais
     )
