@@ -117,3 +117,37 @@ class RecuperacaoSenha(db.Model):
         backref="recuperacao_senha",
         lazy=True
     )
+from datetime import datetime
+from database import db
+
+
+class TermosAceite(db.Model):
+    __tablename__ = "termos_aceite"
+
+    id_aceite = db.Column(
+        db.Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    id_usuario = db.Column(
+        db.Integer,
+        db.ForeignKey("usuarios.id_usuario"),
+        nullable=False
+    )
+
+    versao = db.Column(
+        db.String(20),
+        nullable=False
+    )
+
+    data_aceite = db.Column(
+        db.DateTime,
+        default=datetime.now,
+        nullable=False
+    )
+
+    ip = db.Column(
+        db.String(45),
+        nullable=True
+    )

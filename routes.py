@@ -6,23 +6,46 @@ from flask_mail import Message
 
 from database import db
 
-from models import Usuarios, Locais, TiposMaterial, LocaisMateriais, RecuperacaoSenha
+from models import Usuarios, Locais, TiposMaterial, LocaisMateriais, RecuperacaoSenhafrom, TermosAceite
 
 from extensions import mail
 
 
 main = Blueprint("main", __name__)
+VERSAO_TERMOS = "1.0"
 
 @main.route("/")
 def index():
 
     if "usuarios_id_usuario" not in session:
-        return redirect(url_for("main.login"))
+        return redirect(url_for("main.loguin"))
 
     return render_template(
         "index.html",
         usuarios=session["usuarios_nome"]
     )
+
+
+# ============================================================
+# PÁGINAS INSTITUCIONAIS (públicas, sem necessidade de login)
+# ============================================================
+
+@main.route("/pi")
+def pi():
+
+    return render_template("PI.html")
+
+
+@main.route("/dicas")
+def dicas():
+
+    return render_template("Dicas.html")
+
+
+@main.route("/coleta")
+def coleta():
+
+    return render_template("Coleta.html")
 
 
 # ============================================================
@@ -92,7 +115,7 @@ def cadastro():
 
         flash("Cadastro realizado com sucesso.")
 
-        return redirect(url_for("main.login"))
+        return redirect(url_for("main.loguin"))
 
     return render_template("cadastro.html")
 
@@ -101,7 +124,7 @@ def cadastro():
 # LOGIN
 # ============================================================
 
-@main.route("/login", methods=["GET", "POST"])
+@main.route("/loguin", methods=["GET", "POST"])
 def login():
 
     if request.method == "POST":
@@ -122,7 +145,7 @@ def login():
 
         flash("Email ou senha inválidos.")
 
-    return render_template("login.html")
+    return render_template("loguin.html")
 
 
 # ============================================================
@@ -198,7 +221,7 @@ Equipe Sustenta+
             "você receberá um link para recuperação."
         )
 
-        return redirect(url_for("main.login"))
+        return redirect(url_for("main.loguin"))
 
     return render_template("recuperar_senha.html")
 
@@ -316,7 +339,7 @@ def logout():
 
     session.clear()
 
-    return redirect(url_for("main.login"))
+    return redirect(url_for("main.loguin"))
 
 
 # ============================================================
@@ -338,7 +361,7 @@ def locais():
 
     if "usuarios_id_usuario" not in session:
 
-        return redirect(url_for("main.login"))
+        return redirect(url_for("main.loguin"))
 
     locais = Locais.query.all()
 
@@ -357,7 +380,7 @@ def detalhes_local(id):
 
     if "usuarios_id_usuario" not in session:
 
-        return redirect(url_for("main.login"))
+        return redirect(url_for("main.loguin"))
 
     local = Locais.query.get_or_404(id)
 
@@ -385,7 +408,7 @@ def reciclar():
 
     if "usuarios_id_usuario" not in session:
 
-        return redirect(url_for("main.login"))
+        return redirect(url_for("main.loguin"))
 
     materiais = TiposMaterial.query.order_by(
         TiposMaterial.nome
@@ -416,3 +439,50 @@ def reciclar():
         materiais=materiais,
         locais=locais
     )
+@main.route("/termos-de-uso")
+def termos_de_uso():
+    if "usuarios_id_usuario" not in session:
+        return redirect(url_for("main.loguin"))
+
+    return render_template(
+        "termos_de_uso.html",
+        versao=VERSAO_TERMOS
+    )
+@main.route("/aceitar-termos", methods=["POST"])
+def aceitar_termos():
+
+    if "usuarios_id_usuario" not in session:
+        return redirect(url_for("main.loguin"))
+
+    id_usuario = session["usuarios_id_usuario"]
+
+    # Verifica se já aceitou esta versão
+    aceite_existente = TermosAceite.query.filter_by(
+        id_usuario=id_usuario,
+        versao=VERSAO_TERMOS
+    ).first()
+
+    if not aceite_existente:
+
+        novo_aceite = TermosAceite(
+            id_usuario=id_usuario,
+            versao=VERSAO_TERMOS,
+            ip=request.remote_addr
+        )
+
+        db.session.add(novo_aceite)
+        db.session.commit()
+
+    return redirect(url_for("main.index"))
+def verificar_termos_aceitos():
+    if "usuarios_id_usuario" not in session:
+        return False
+
+    id_usuario = session["usuarios_id_usuario"]
+
+    aceite = TermosAceite.query.filter_by(
+        id_usuario=id_usuario,
+        versao=VERSAO_TERMOS
+    ).first()
+
+    return aceite is not None

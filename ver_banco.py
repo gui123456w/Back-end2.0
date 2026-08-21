@@ -1,4 +1,4 @@
-from ___init__ import create_app
+from _init_ import create_app
 from models import Usuarios
 from models import Locais
 from models import TiposMaterial
