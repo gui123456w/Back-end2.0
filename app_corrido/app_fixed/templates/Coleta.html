@@ -9,32 +9,18 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/pi.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/Coleta.css') }}">
+
 </head>
 
 <body>
 
-    <nav class="menu">
-
+ <nav class="menu">
         <div class="menu-links">
-
-            <a href="/app_corrigido/app_fixed/templates/PI.html">
-                Início
-            </a>
-
-            <a href="/app_corrigido/app_fixed/templates/Dicas.html">
-                Dicas Sustentáveis
-            </a>
-
-            <a href="/app_corrigido/app_fixed/templates/Coleta.html">
-                Pontos de Coletas
-            </a>
-
-            <a href="/app_corrigido/app_fixed/templates/Loguin.html">
-                Login
-            </a>
-
+            <a href="{{ url_for('main.pi') }}">Início</a>
+            <a href="{{ url_for('main.dicas') }}">Dicas Sustentáveis</a>
+            <a href="{{ url_for('main.coleta') }}">Pontos de Coletas</a>
+            <a href="{{ url_for('main.loguin') }}">Loguin</a>
         </div>
-
     </nav>
 
     <section class="hero-custom">
