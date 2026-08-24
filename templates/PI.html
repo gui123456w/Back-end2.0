@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Sustenta+</title>
-    <link rel="stylesheet" href="/app_corrigido/app_fixed/css/pi.css">
-    <link rel="stylesheet" href="/app_corrigido/app_fixed/css/card.css">
-    <link rel="stylesheet" href="/app_corrigido/app_fixed/css/responsivo.css">
-    <link rel="stylesheet" href="/app_corrigido/app_fixed/templates/css/hero.css">
-    <link rel="stylesheet" href="/app_corrigido/app_fixed/templates/css/button.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pi.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/card.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsivo.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hero.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/button.css') }}">
 </head>
 
 <body>
@@ -17,10 +17,10 @@
 
         <nav class="menu">
             <div class="menu-links">
-                <a href="/app_corrigido/app_fixed/templates/PI.html">Início</a>
-                <a href="/app_corrigido/app_fixed/templates/Dicas.html">Dicas Sustentáveis</a>
-                <a href="/app_corrigido/app_fixed/templates/Coleta.html">Pontos de Coletas</a>
-                <a href="/app_corrigido/app_fixed/templates/Loguin.html">Login</a>
+                <a href="{{ url_for('main.pi') }}">Início</a>
+                <a href="{{ url_for('main.dicas') }}">Dicas Sustentáveis</a>
+                <a href="{{ url_for('main.coleta') }}">Pontos de Coletas</a>
+                <a href="{{ url_for('main.loguin') }}">Login</a>
             </div>
         </nav>
 
@@ -29,11 +29,10 @@
             <div class="hero-text">
                 <h1 class="title">Sustenta+</h1>
                 <h3 class="subtitle">Transformando resíduos em novas oportunidades para um futuro sustentável!</h3>
-                <!-- <h4><p>Sustenta+ e um site que vai ensinar você, sua familia e seus colegas a sobre os lixos que vemos na rua! cada cor representa uma tipo de descarte diferente e aqui voce vai descobrir cada um deles.</p></h4> -->
             </div>
 
             <div class="hero-img">
-                <img src="/app_corrigido/app_fixed/img/Reciclavel (1).png">
+                <img src="{{ url_for('static', filename='img/Reciclavel (1).png') }}" alt="Reciclável">
             </div>
 
         </div>
@@ -46,7 +45,7 @@
 
                 <div class="card card-green">
                         <h3>Vidro</h3>
-                        <img src="/app_corrigido/app_fixed/img/LixoVerde.png">
+                        <img src="{{ url_for('static', filename='img/LixoVerde.png') }}" alt="Vidro">
 
                     <button class="btn-card" data-tipo="vidro" onclick="montarConteudo()">Saiba Mais</button>
 
@@ -54,7 +53,7 @@
 
                 <div class="card card-blue">
                     <h3>Papel e papelão</h3>
-                    <img src="/app_corrigido/app_fixed/img/lixoAzul.png">
+                    <img src="{{ url_for('static', filename='img/lixoAzul.png') }}" alt="Papel e papelão">
 
                     <button class="btn-card" data-tipo="papel">Saiba Mais</button>
 
@@ -62,7 +61,7 @@
 
                 <div class="card card-red">
                     <h3>Plastico e isopor</h3>
-                    <img src="/app_corrigido/app_fixed/templates/img/lixoVermelho.png">
+                    <img src="{{ url_for('static', filename='img/lixoVermelho.png') }}" alt="Plástico e isopor">
 
                     <button class="btn-card" data-tipo="plastico">Saiba Mais</button>
 
@@ -70,7 +69,7 @@
 
                 <div class="card card-brown">
                     <h3>Organico</h3>
-                    <img src="/app_corrigido/app_fixed/img/lixoMarrom.png">
+                    <img src="{{ url_for('static', filename='img/lixoMarrom.png') }}" alt="Orgânico">
 
                     <button class="btn-card" data-tipo="organico">Saiba Mais</button>
 
@@ -78,7 +77,7 @@
 
                 <div class="card card-orange">
                     <h3>Metal</h3>
-                    <img src="/app_corrigido/app_fixed/img/lixolaranja.png">
+                    <img src="{{ url_for('static', filename='img/lixolaranja.png') }}" alt="Metal">
 
                     <button class="btn-card" data-tipo="metal">Saiba Mais</button>
 
@@ -86,7 +85,7 @@
 
                 <div class="card card-white">
                     <h3>Saude</h3>
-                    <img src="/app_corrigido/app_fixed/templates/img/lixoBranco.png">
+                    <img src="{{ url_for('static', filename='img/lixoBranco.png') }}" alt="Saúde">
 
                     <button class="btn-card" data-tipo="saude">Saiba Mais</button>
 
@@ -94,7 +93,7 @@
 
                 <div class="card card-purple">
                     <h3>Radioativo</h3>
-                    <img src="/app_corrigido/app_fixed/img/lixoRoxo.png">
+                    <img src="{{ url_for('static', filename='img/lixoRoxo.png') }}" alt="Radioativo">
 
                     <button class="btn-card" data-tipo="radioativo">Saiba Mais</button>
 
@@ -102,7 +101,7 @@
 
                 <div class="card card-grey">
                     <h3>Misturado</h3>
-                    <img src="/app_corrigido/app_fixed/img/lixoCinza.png">
+                    <img src="{{ url_for('static', filename='img/lixoCinza.png') }}" alt="Misturado">
 
                     <button class="btn-card" data-tipo="misturado">Saiba Mais</button>
 
@@ -125,7 +124,7 @@
             </div>
         </div>
     </div>
-    <script src="/app_corrigido/app_fixed/js/PI.js"></script>
+    <script src="{{ url_for('static', filename='js/PI.js') }}"></script>
 </body>
 
 </html>
