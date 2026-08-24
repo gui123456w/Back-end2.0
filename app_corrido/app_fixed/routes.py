@@ -1,4 +1,12 @@
-from flask import Blueprint,render_template,request, redirect,session,flash,url_for
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+    redirect,
+    session,
+    flash,
+    url_for
+)
 
 from datetime import datetime, timedelta
 import secrets
@@ -6,7 +14,6 @@ import secrets
 from flask_mail import Message
 
 from database import db
-
 from models import (
     Usuarios,
     RecuperacaoSenha,
@@ -28,43 +35,38 @@ VERSAO_TERMOS = "1.0"
 @main.before_request
 def verificar_acesso_termos():
 
-    # Rotas que podem ser acessadas sem aceitar os termos.
-    # Login, cadastro e recuperação não dependem do aceite.
+    # Rotas que podem ser acessadas sem aceitar os termos
     rotas_liberadas = {
-        "main.index",
         "main.loguin",
         "main.cadastro",
         "main.recuperar_senha",
         "main.redefinir_senha",
+        "main.pi",
+        "main.dicas",
+        "main.coleta",
         "main.termos_de_uso",
         "main.aceitar_termos",
         "main.logout"
     }
 
-    # Se a rota atual está liberada, não faz nada.
+    # Se a rota atual está liberada, não faz nada
     if request.endpoint in rotas_liberadas:
         return
 
-    # Se o usuário não está logado,
-    # não verifica os termos.
+    # Se o usuário não está logado, não verifica termos
     if "usuarios_id_usuario" not in session:
         return
 
-    # ID do usuário logado.
-    id_usuario = session[
-        "usuarios_id_usuario"
-    ]
+    # Verifica se o usuário já aceitou a versão atual
+    id_usuario = session["usuarios_id_usuario"]
 
-    # Procura o aceite da versão atual.
     aceite = TermosAceite.query.filter_by(
         id_usuario=id_usuario,
         versao=VERSAO_TERMOS
     ).first()
 
-    # Se ainda não aceitou a versão atual,
-    # manda o usuário para os Termos.
+    # Se ainda não aceitou, manda para os termos
     if not aceite:
-
         return redirect(
             url_for("main.termos_de_uso")
         )
@@ -77,15 +79,14 @@ def verificar_acesso_termos():
 @main.route("/")
 def index():
 
-    # Se não estiver logado,
-    # vai para o login.
+    # Se não estiver logado, vai para o login
     if "usuarios_id_usuario" not in session:
-
         return redirect(
             url_for("main.loguin")
         )
 
-    # Usuário logado vai para a página PI.
+    # Usuário logado vai para a página PI
+    # O before_request verifica os termos antes
     return redirect(
         url_for("main.pi")
     )
@@ -123,17 +124,10 @@ def coleta():
 # CADASTRO
 # ============================================================
 
-@main.route(
-    "/cadastro",
-    methods=["GET", "POST"]
-)
+@main.route("/cadastro", methods=["GET", "POST"])
 def cadastro():
 
     if request.method == "POST":
-
-        # ----------------------------------------------------
-        # DADOS DO FORMULÁRIO
-        # ----------------------------------------------------
 
         nome = request.form.get(
             "nome",
@@ -168,34 +162,10 @@ def cadastro():
         )
 
         # ----------------------------------------------------
-        # ACEITE DOS TERMOS
-        # ----------------------------------------------------
-
-        aceitar_termos = request.form.get(
-            "aceitar_termos"
-        )
-
-        if not aceitar_termos:
-
-            flash(
-                "Você precisa aceitar os Termos de Uso "
-                "para criar sua conta."
-            )
-
-            return redirect(
-                url_for("main.cadastro")
-            )
-
-        # ----------------------------------------------------
         # CAMPOS OBRIGATÓRIOS
         # ----------------------------------------------------
 
-        if (
-            not nome
-            or not email
-            or not senha
-            or not cpf
-        ):
+        if not nome or not email or not senha or not cpf:
 
             flash(
                 "Preencha todos os campos."
@@ -293,61 +263,14 @@ def cadastro():
             cpf=cpf
         )
 
-        # Cria senha criptografada.
+        # Cria senha criptografada
         novo.criar_senha(senha)
 
-        try:
-
-            # Adiciona o usuário.
-            db.session.add(novo)
-
-            # Gera o ID do usuário sem fazer commit ainda.
-            db.session.flush()
-
-            # ------------------------------------------------
-            # SALVA O ACEITE DOS TERMOS
-            # ------------------------------------------------
-
-            novo_aceite = TermosAceite(
-                id_usuario=novo.id_usuario,
-                versao=VERSAO_TERMOS,
-                ip=request.remote_addr
-            )
-
-            db.session.add(
-                novo_aceite
-            )
-
-            # Salva usuário + aceite juntos.
-            db.session.commit()
-
-        except Exception as erro:
-
-            # Se qualquer coisa der errado,
-            # desfaz o cadastro inteiro.
-            db.session.rollback()
-
-            print(
-                "Erro ao realizar cadastro:",
-                erro
-            )
-
-            flash(
-                "Não foi possível realizar o cadastro. "
-                "Tente novamente."
-            )
-
-            return redirect(
-                url_for("main.cadastro")
-            )
-
-        # ----------------------------------------------------
-        # CADASTRO CONCLUÍDO
-        # ----------------------------------------------------
+        db.session.add(novo)
+        db.session.commit()
 
         flash(
-            "Cadastro realizado com sucesso. "
-            "Agora faça login."
+            "Cadastro realizado com sucesso."
         )
 
         return redirect(
@@ -363,10 +286,7 @@ def cadastro():
 # LOGIN
 # ============================================================
 
-@main.route(
-    "/loguin",
-    methods=["GET", "POST"]
-)
+@main.route("/loguin", methods=["GET", "POST"])
 def loguin():
 
     if request.method == "POST":
@@ -385,13 +305,9 @@ def loguin():
             email=email
         ).first()
 
-        # ----------------------------------------------------
-        # VERIFICA LOGIN
-        # ----------------------------------------------------
-
         if usuario and usuario.verificar_senha(senha):
 
-            # Cria sessão.
+            # Cria sessão
             session["usuarios_id_usuario"] = (
                 usuario.id_usuario
             )
@@ -400,8 +316,8 @@ def loguin():
                 usuario.nome
             )
 
-            # Vai para o index.
-            # O before_request verifica os termos.
+            # Vai para a página principal.
+            # O before_request verificará os termos.
             return redirect(
                 url_for("main.index")
             )
@@ -444,7 +360,7 @@ def recuperar_senha():
 
             token = secrets.token_urlsafe(64)
 
-            # Token válido por 15 minutos.
+            # Token válido por 15 minutos
             expiracao = (
                 datetime.now()
                 + timedelta(minutes=15)
@@ -461,10 +377,7 @@ def recuperar_senha():
                 usado=False
             )
 
-            db.session.add(
-                recuperacao
-            )
-
+            db.session.add(recuperacao)
             db.session.commit()
 
             # ------------------------------------------------
@@ -504,15 +417,12 @@ Caso você não tenha solicitado a recuperação da senha,
 ignore este e-mail.
 
 Atenciosamente,
-
 Equipe Sustenta+
 """
 
             try:
 
-                mail.send(
-                    mensagem
-                )
+                mail.send(mensagem)
 
             except Exception as erro:
 
@@ -521,26 +431,20 @@ Equipe Sustenta+
                     erro
                 )
 
-                # Remove o token criado
-                # caso o envio falhe.
-                db.session.delete(
-                    recuperacao
-                )
-
+                # Remove o token criado caso o email falhe
+                db.session.delete(recuperacao)
                 db.session.commit()
 
                 flash(
-                    "Não foi possível enviar o email "
-                    "de recuperação. Tente novamente mais tarde."
+                    "Não foi possível enviar o email de recuperação. "
+                    "Tente novamente mais tarde."
                 )
 
                 return redirect(
-                    url_for(
-                        "main.recuperar_senha"
-                    )
+                    url_for("main.recuperar_senha")
                 )
 
-        # Não informa se o email existe.
+        # Não informa se o email existe
         flash(
             "Se o e-mail estiver cadastrado, "
             "você receberá um link para recuperação."
@@ -686,7 +590,7 @@ def redefinir_senha(token):
             nova_senha
         )
 
-        # Marca token como usado.
+        # Marca token como usado
         recuperacao.usado = True
 
         db.session.commit()
@@ -726,11 +630,12 @@ def logout():
 @main.route("/termos-de-uso")
 def termos_de_uso():
 
-    # Os termos podem ser visualizados
-    # mesmo sem login.
-    #
-    # Isso permite que o usuário leia os termos
-    # através do link existente no cadastro.
+    # Precisa estar logado
+    if "usuarios_id_usuario" not in session:
+
+        return redirect(
+            url_for("main.loguin")
+        )
 
     return render_template(
         "termos_de_uso.html",
@@ -747,10 +652,6 @@ def termos_de_uso():
     methods=["POST"]
 )
 def aceitar_termos():
-
-    # Esta rota é utilizada principalmente
-    # para usuários antigos ou para uma nova
-    # versão dos termos.
 
     if "usuarios_id_usuario" not in session:
 
@@ -787,31 +688,11 @@ def aceitar_termos():
             ip=request.remote_addr
         )
 
-        try:
+        db.session.add(
+            novo_aceite
+        )
 
-            db.session.add(
-                novo_aceite
-            )
-
-            db.session.commit()
-
-        except Exception as erro:
-
-            db.session.rollback()
-
-            print(
-                "Erro ao salvar aceite dos termos:",
-                erro
-            )
-
-            flash(
-                "Não foi possível registrar "
-                "o aceite dos Termos de Uso."
-            )
-
-            return redirect(
-                url_for("main.termos_de_uso")
-            )
+        db.session.commit()
 
     flash(
         "Termos de Uso aceitos com sucesso."
@@ -846,3 +727,4 @@ def verificar_termos_aceitos():
     )
 
     return aceite is not None
+
